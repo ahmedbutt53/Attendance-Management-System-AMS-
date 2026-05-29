@@ -112,6 +112,12 @@ class AdminStudentController extends Controller
             'notes' => $validated['notes'] ?? 'Added by Administrator',
         ]);
 
+        // Send WhatsApp notification
+        app(\App\Services\WhatsAppService::class)->sendMessage(
+            $user->phone,
+            "Hello {$user->name}, your attendance for {$attendance->attendance_date} has been marked as " . ucfirst($attendance->status) . " by the administrator."
+        );
+
         // Automatically update grade for the month of this attendance
         $user->updateOrCreateGradeForMonth($attendance->attendance_date);
 
@@ -132,6 +138,12 @@ class AdminStudentController extends Controller
             'status' => $validated['status'],
             'notes' => $validated['notes'],
         ]);
+
+        // Send WhatsApp notification
+        app(\App\Services\WhatsAppService::class)->sendMessage(
+            $attendance->user->phone,
+            "Hello {$attendance->user->name}, your attendance for {$attendance->attendance_date} has been updated to " . ucfirst($attendance->status) . " by the administrator."
+        );
 
         // Automatically update grade for the month of this attendance
         $attendance->user->updateOrCreateGradeForMonth($attendance->attendance_date);

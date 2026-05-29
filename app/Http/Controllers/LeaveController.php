@@ -40,13 +40,25 @@ class LeaveController extends Controller
         ]);
 
         // Create Leave Request
-        Leave::create([
+        $leave = Leave::create([
             'user_id' => $user->id,
             'from_date' => $validated['from_date'],
             'to_date' => $validated['to_date'],
             'reason' => $validated['reason'],
             'status' => 'pending',
         ]);
+
+        // Send WhatsApp notification to Admin
+        $admin = \App\Models\User::whereHas('roles', function($q) {
+            $q->where('name', 'Admin');
+        })->first();
+
+        if ($admin && $admin->phone) {
+            app(\App\Services\WhatsAppService::class)->sendMessage(
+                $admin->phone,
+                "Hello Admin, student {$user->name} has submitted a leave request from {$leave->from_date->format('Y-m-d')} to {$leave->to_date->format('Y-m-d')} for your approval."
+            );
+        }
 
         return back()->with('success', 'Leave request submitted successfully to the administrator.');
     }

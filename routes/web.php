@@ -133,6 +133,21 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/roles/{role}', [AdminRoleController::class, 'update'])->name('admin.roles.update');
         Route::delete('/admin/roles/{role}', [AdminRoleController::class, 'destroy'])->name('admin.roles.destroy');
         Route::post('/admin/users/{user}/roles', [AdminRoleController::class, 'assignUserRoles'])->name('admin.users.roles.assign');
+        // WhatsApp test route
+        Route::get('/admin/whatsapp-test', function () {
+            $to = request('to', '03001234567');
+            $message = request('message', 'Hello! This is a test WhatsApp notification from the Attendance Management System.');
+            
+            $success = app(\App\Services\WhatsAppService::class)->sendMessage($to, $message);
+            
+            return response()->json([
+                'success' => $success,
+                'recipient' => $to,
+                'message' => $message,
+                'provider' => config('services.whatsapp.provider'),
+                'log_file' => storage_path('logs/whatsapp.log'),
+            ]);
+        });
     });
 });
 

@@ -65,6 +65,18 @@ class AdminTaskController extends Controller
 
         $task->users()->attach($validated['students']);
 
+        // Send WhatsApp notifications to assigned students
+        $students = User::whereIn('id', $validated['students'])->get();
+        foreach ($students as $student) {
+            if ($student->phone) {
+                $dueDateStr = $task->due_date ? $task->due_date->format('Y-m-d') : 'No due date';
+                app(\App\Services\WhatsAppService::class)->sendMessage(
+                    $student->phone,
+                    "Hello {$student->name}, a new task '{$task->title}' has been assigned to you by the administrator. Due date: {$dueDateStr}."
+                );
+            }
+        }
+
         return redirect()->route('admin.tasks.index')->with('success', 'Task assigned successfully!');
     }
 
@@ -100,6 +112,17 @@ class AdminTaskController extends Controller
             'reviewed_by' => Auth::id(),
             'reviewed_at' => now(),
         ]);
+
+        // Send WhatsApp notification to student
+        $student = $response->user;
+        $task = $response->task;
+        if ($student && $student->phone) {
+            $feedbackStr = $response->feedback ? " Feedback: {$response->feedback}" : "";
+            app(\App\Services\WhatsAppService::class)->sendMessage(
+                $student->phone,
+                "Hello {$student->name}, your response for task '{$task->title}' has been " . strtoupper($response->status) . " by the administrator.{$feedbackStr}"
+            );
+        }
 
         return back()->with('success', 'Task response reviewed and status updated successfully!');
     }

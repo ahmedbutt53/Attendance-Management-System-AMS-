@@ -52,6 +52,12 @@ class AttendanceController extends Controller
             'notes' => 'Self-marked from dashboard',
         ]);
 
+        // Send WhatsApp notification
+        app(\App\Services\WhatsAppService::class)->sendMessage(
+            $user->phone,
+            "Hello {$user->name}, your attendance for today (" . Carbon::today()->format('Y-m-d') . ") has been marked as Present."
+        );
+
         // Recalculate grade
         $user->updateOrCreateGradeForMonth($attendance->attendance_date);
 

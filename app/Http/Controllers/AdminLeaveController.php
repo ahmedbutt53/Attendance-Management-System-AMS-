@@ -46,6 +46,12 @@ class AdminLeaveController extends Controller
             'admin_comments' => $request->get('admin_comments'),
         ]);
 
+        // Send WhatsApp notification
+        app(\App\Services\WhatsAppService::class)->sendMessage(
+            $leave->user->phone,
+            "Hello {$leave->user->name}, your leave request from {$leave->from_date->format('Y-m-d')} to {$leave->to_date->format('Y-m-d')} has been APPROVED by the administrator."
+        );
+
         // Recalculate grades for overlapping months
         $leave->user->updateOrCreateGradeForMonth($leave->from_date);
         if (!$leave->from_date->isSameMonth($leave->to_date)) {
@@ -69,6 +75,12 @@ class AdminLeaveController extends Controller
             'approved_by' => Auth::id(),
             'admin_comments' => $request->get('admin_comments'),
         ]);
+
+        // Send WhatsApp notification
+        app(\App\Services\WhatsAppService::class)->sendMessage(
+            $leave->user->phone,
+            "Hello {$leave->user->name}, your leave request from {$leave->from_date->format('Y-m-d')} to {$leave->to_date->format('Y-m-d')} has been REJECTED by the administrator."
+        );
 
         // Recalculate grades for overlapping months
         $leave->user->updateOrCreateGradeForMonth($leave->from_date);
